@@ -435,3 +435,4 @@ ol.steps.small { margin-top: 8px; }
 .dot.m2 { opacity: 0.4; }
 .set small + small { margin-top: 2px; }
 .kg-row .grow { flex: 1; }
+.invite { word-break: break-all; font-size: 13px; user-select: all; -webkit-user-select: all; }
