@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Gym</title>
+  <meta name="theme-color" content="#831843">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Gym">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header class="topbar"><h1 id="title">Heute</h1><a href="#/profile" class="gear" aria-label="Profil und Einstellungen">⚙️</a></header>
+  <main id="view"></main>
+  <nav class="tabbar">
+    <a href="#/" data-tab="home"><span>🏠</span>Heute</a>
+    <a href="#/plan" data-tab="plan"><span>📅</span>Plan</a>
+    <a href="#/exercises" data-tab="exercises"><span>🏋️‍♀️</span>Übungen</a>
+    <a href="#/progress" data-tab="progress"><span>📈</span>Fortschritt</a>
+    <a href="#/food" data-tab="food"><span>🥗</span>Essen</a>
+  </nav>
+  <div id="sheet" class="sheet hidden"></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
