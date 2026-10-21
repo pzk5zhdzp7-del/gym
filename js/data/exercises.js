@@ -448,6 +448,9 @@ export const WARMUP = [
   { name: 'Katze-Kuh', reps: 8, area: 'upper', cues: 'Im Vierfüßlerstand Rücken abwechselnd rund und hohl machen.' },
 ];
 
+// Gelöschte eigene Übungen: nicht mehr im Plan, aber im Verlauf noch lesbar (befüllt von custom.js)
+export const ARCHIVE = [];
+
 export function getExercise(id) {
-  return EXERCISES.find((e) => e.id === id);
+  return EXERCISES.find((e) => e.id === id) || ARCHIVE.find((e) => e.id === id);
 }

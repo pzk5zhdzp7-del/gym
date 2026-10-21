@@ -1,6 +1,7 @@
 // Übungen-Tab: Plan mit Varianten je Platz und alle Übungen mit Anleitung
 import { state, save } from '../store.js';
 import { EXERCISES, SESSIONS, ROTATION, MUSCLES, WARMUP, getExercise } from '../data/exercises.js';
+import { TYPES, exerciseType, saveExercise, deleteExercise } from '../custom.js';
 import { MOBILITY, getMobility } from '../data/mobility.js';
 import {
   slotExercise, workingWeight, repRange, phaseInfo, exerciseHistory, hasWeight, fmtKg,
@@ -48,18 +49,22 @@ function planList() {
     <div class="list">${WARMUP.map((w) => `<div class="row"><div class="grow"><div>${esc(w.name)}</div><div class="small muted">${w.sec ? `${Math.round(w.sec / 60) || 1} Min` : `${w.reps}×${w.side ? ' je Seite' : ''}`} · ${w.area === 'lower' ? 'Beintage' : w.area === 'upper' ? 'Oberkörpertage' : 'immer'}</div></div></div>`).join('')}</div>`;
 }
 
+const GROUPS = [...new Set(EXERCISES.map((e) => e.group))];
+
 function library() {
-  const groups = [...new Set(EXERCISES.map((e) => e.group))];
-  const ex = groups.map((g) => `
+  const ex = GROUPS.map((g) => `
     <h2>${esc(g)}</h2>
     <div class="list">${EXERCISES.filter((e) => e.group === g).map((e) => `
       <button class="row" data-action="ex-info" data-id="${e.id}"><span class="icon">${e.icon}</span>
-        <div class="grow"><div>${esc(e.name)}</div><div class="small muted">${esc(e.equip)} · ${e.muscles.map((m) => MUSCLES[m]).join(', ')}</div></div><span class="chev">›</span></button>`).join('')}
+        <div class="grow"><div>${esc(e.name)}${e.custom ? ' <span class="pill">eigene</span>' : ''}</div><div class="small muted">${esc(e.equip)} · ${e.muscles.map((m) => MUSCLES[m]).join(', ')}</div></div><span class="chev">›</span></button>`).join('')}
     </div>`).join('');
   const mob = MOBILITY.map((m) => `
     <button class="row" data-action="mob-info" data-id="${m.id}"><span class="icon">🧘‍♀️</span>
       <div class="grow"><div>${esc(m.name)}</div><div class="small muted">${m.sec ? `${m.sec} s` : `${m.reps}×`}${m.side ? ' je Seite' : ''} · ${esc(m.focus)}</div></div><span class="chev">›</span></button>`).join('');
-  return `${ex}<h2>Dehnen</h2><div class="list">${mob}</div>`;
+  return `
+    <p class="small muted" style="margin-top:0">Fehlt dir eine Übung? Leg sie selbst an. Sie ist dann bei passenden Plätzen im Plan als Variante wählbar oder kommt fest in eine Einheit.</p>
+    <button class="btn block" data-action="cx-new">＋ Eigene Übung</button>
+    ${ex}<h2>Dehnen</h2><div class="list">${mob}</div>`;
 }
 
 export function exerciseSheet(id, { slotId = null, inWorkout = false } = {}) {
@@ -90,19 +95,87 @@ export function exerciseSheet(id, { slotId = null, inWorkout = false } = {}) {
     <div class="card bodycard">${bodyMap(ex.muscles, ex.muscles2)}
       <div class="small"><span class="dot m1"></span>${ex.muscles.map((m) => MUSCLES[m]).join(', ')}
       ${ex.muscles2.length ? `<br><span class="dot m2"></span><span class="muted">${ex.muscles2.map((m) => MUSCLES[m]).join(', ')}</span>` : ''}</div></div>
-    <h2>Einstellen</h2>
-    <div class="card small">${esc(ex.setup)}</div>
-    <h2>Ausführung</h2>
-    <div class="card"><ol class="steps">${ex.steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ol></div>
-    <h2>Typische Fehler</h2>
-    <div class="card"><ul class="steps warn-list">${ex.mistakes.map((s) => `<li>${esc(s)}</li>`).join('')}</ul></div>
+    ${ex.setup ? `<h2>Einstellen</h2>
+    <div class="card small">${esc(ex.setup)}</div>` : ''}
+    ${ex.steps.length ? `<h2>Ausführung</h2>
+    <div class="card"><ol class="steps">${ex.steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ol></div>` : ''}
+    ${ex.mistakes.length ? `<h2>Typische Fehler</h2>
+    <div class="card"><ul class="steps warn-list">${ex.mistakes.map((s) => `<li>${esc(s)}</li>`).join('')}</ul></div>` : ''}
     ${ex.tip ? `<div class="card note small">💡 ${esc(ex.tip)}</div>` : ''}
     ${videoLink(ex.name)}
     ${weighted && !inWorkout ? `<button class="btn secondary block" data-action="set-weight" data-id="${ex.id}" style="margin-top:12px">${w != null ? `Arbeitsgewicht ändern (${fmtKg(w)})` : 'Startgewicht festlegen'}</button>` : ''}
     ${alts}
     ${chart}
     ${recent}
+    ${ex.custom && !ex.deleted && !inWorkout ? `<button class="btn secondary block" data-action="cx-edit" data-id="${ex.id}" style="margin-top:12px">Übung bearbeiten</button>
+      <button class="btn ghost block" data-action="cx-delete" data-id="${ex.id}">Übung löschen</button>` : ''}
     <button class="btn block" data-action="close-sheet" style="margin-top:12px">Schließen</button>`);
+}
+
+/* ---------- Eigene Übung anlegen / bearbeiten ---------- */
+
+function exerciseEditor(ex = null) {
+  const lines = (a) => esc((a || []).join('\n'));
+  const type = ex ? exerciseType(ex) : 'iso';
+  const opt = (v, label, cur) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${esc(label)}</option>`;
+  openSheet(`
+    <form data-form="exercise" ${ex ? `data-id="${ex.id}"` : ''}>
+      <h3>${ex ? 'Übung bearbeiten' : 'Eigene Übung'}</h3>
+      <div class="list">
+        <label class="field"><span>Name</span><input name="cx-name" value="${esc(ex?.name || '')}" autocomplete="off" placeholder="z. B. Hip Thrust an der Smith-Maschine"></label>
+        <label class="field"><span>Bereich</span><select name="cx-group">${GROUPS.map((g) => opt(g, g, ex?.group || 'Po & Beine')).join('')}</select></label>
+        <label class="field"><span>Art</span><select name="cx-type">${Object.entries(TYPES).map(([k, t]) => opt(k, t.label, type)).join('')}</select></label>
+        <label class="field"><span>Gewichtssprung in kg (bei Gewichtsübungen)</span><input name="cx-inc" type="text" inputmode="decimal" value="${String(ex?.inc ?? 2.5).replace('.', ',')}"></label>
+        <label class="check-row"><span class="grow">Wiederholungen je Seite</span><input type="checkbox" class="switch" name="cx-side" ${ex?.side ? 'checked' : ''}></label>
+        <label class="field"><span>Gerät / Ort</span><input name="cx-equip" value="${esc(ex?.equip && ex.equip !== 'Eigene Übung' ? ex.equip : '')}" autocomplete="off" placeholder="z. B. Kabelzug"></label>
+      </div>
+      <h2>Trainierte Muskeln</h2>
+      <div class="list"><div class="chips">${Object.entries(MUSCLES).map(([k, m]) => `<label><input type="checkbox" name="cx-muscle" value="${k}" ${ex?.muscles?.includes(k) ? 'checked' : ''}>${esc(m)}</label>`).join('')}</div></div>
+      <h2>Anleitung</h2>
+      <div class="list">
+        <label class="field"><span>Einstellen / Ausgangsposition</span><textarea name="cx-setup" rows="2">${esc(ex?.setup || '')}</textarea></label>
+        <label class="field"><span>Ausführung (ein Schritt pro Zeile)</span><textarea name="cx-steps" rows="4">${lines(ex?.steps)}</textarea></label>
+        <label class="field"><span>Typische Fehler (einer pro Zeile)</span><textarea name="cx-mistakes" rows="2">${lines(ex?.mistakes)}</textarea></label>
+        <label class="field"><span>Tipp</span><input name="cx-tip" value="${esc(ex?.tip || '')}" autocomplete="off"></label>
+      </div>
+      <h2>Im Plan</h2>
+      <div class="list">
+        <label class="field"><span>Fest einplanen</span><select name="cx-session">
+          ${opt('', 'Nein, nur als Variante wählbar', ex?.session || '')}
+          ${Object.entries(SESSIONS).map(([k, s]) => opt(k, `Zusätzlich in ${s.name}`, ex?.session || '')).join('')}
+        </select></label>
+        <label class="field"><span>Sätze</span><select name="cx-sets">${[2, 3, 4].map((n) => opt(String(n), `${n} Sätze`, String(ex?.sets || 3))).join('')}</select></label>
+      </div>
+      <p class="small warn" id="cx-error"></p>
+      <button class="btn block" type="submit">Speichern</button>
+      <button class="btn secondary block" type="button" data-action="close-sheet" style="margin-top:8px">Abbrechen</button>
+    </form>`);
+}
+
+export function submitExercise(form) {
+  const f = (n) => form.querySelector(`[name="cx-${n}"]`);
+  const lines = (n) => f(n).value.split('\n').map((x) => x.trim()).filter(Boolean);
+  const name = f('name').value.trim();
+  if (!name) { form.querySelector('#cx-error').textContent = 'Bitte gib der Übung einen Namen.'; return; }
+  const ex = saveExercise({
+    id: form.dataset.id || undefined,
+    name,
+    group: f('group').value,
+    type: f('type').value,
+    inc: parseFloat(f('inc').value.replace(',', '.')),
+    side: f('side').checked,
+    equip: f('equip').value.trim(),
+    muscles: [...form.querySelectorAll('[name="cx-muscle"]:checked')].map((x) => x.value),
+    setup: f('setup').value.trim(),
+    steps: lines('steps'),
+    mistakes: lines('mistakes'),
+    tip: f('tip').value.trim(),
+    session: f('session').value,
+    sets: Number(f('sets').value),
+  });
+  closeSheet();
+  rerender();
+  exerciseSheet(ex.id);
 }
 
 function mobInfo(id) {
@@ -126,6 +199,18 @@ export const exerciseActions = {
   },
   'mob-info'(el) {
     mobInfo(el.dataset.id);
+  },
+  'cx-new'() {
+    exerciseEditor();
+  },
+  'cx-edit'(el) {
+    exerciseEditor(getExercise(el.dataset.id));
+  },
+  'cx-delete'(el) {
+    if (!confirm(`„${getExercise(el.dataset.id).name}“ löschen? Dein bisheriger Verlauf bleibt erhalten.`)) return;
+    deleteExercise(el.dataset.id);
+    closeSheet();
+    rerender();
   },
   choose(el) {
     state.choice[el.dataset.slot] = el.dataset.id;
