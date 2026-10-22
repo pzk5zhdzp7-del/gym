@@ -5,6 +5,7 @@ import {
   weeklyStats, weekStreak, strengthHistory, planExercises, exerciseHistory, workingWeight, phaseInfo, hasWeight, PHASES,
 } from '../training.js';
 import { esc, kg, fmtDate, openSheet, lineChart, barChart, rerender } from '../ui.js';
+import { activityList, activityButton } from '../activity.js';
 
 export const MEASURES = [
   { key: 'waist', label: 'Taille' },
@@ -91,7 +92,10 @@ export function viewProgress() {
     ${measureRows ? `<div class="list">${measureRows}</div><p class="small muted">Zuletzt gemessen am ${fmtDate(lastM.date)}${ms.length > 1 ? `, Veränderung seit ${fmtDate(firstM.date)}` : ''}.</p>` : '<p class="small muted">Alle 2–4 Wochen morgens messen, immer an der gleichen Stelle.</p>'}
     <button class="btn secondary block" data-action="measure">📏 Maße eintragen</button>
     <h2>Verlauf</h2>
-    ${hist ? `<div class="list">${hist}</div>` : '<div class="empty">Noch keine Trainings. Los geht\'s! 💪</div>'}`;
+    ${hist ? `<div class="list">${hist}</div>` : '<div class="empty">Noch keine Trainings. Los geht\'s! 💪</div>'}
+    <h2>Anderes Training</h2>
+    ${activityList() ? `<div class="list">${activityList()}</div>` : '<p class="small muted">Fußball, Joggen, Radtour? Beschreib es kurz, Claude trägt es ein.</p>'}
+    ${activityButton()}`;
 }
 
 function historyDetails(idx) {
