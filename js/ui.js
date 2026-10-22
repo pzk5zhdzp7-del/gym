@@ -6,6 +6,7 @@ export const ui = {
   foodDay: (new Date().getDay() + 6) % 7,
   exTab: 'plan',
   foodTab: 'plan',
+  homeOffset: 0, // Startseite: Tage ab heute
   shopFromToday: false,
   pending: null,
   holdStart: null,
