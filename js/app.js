@@ -195,8 +195,11 @@ configureSoreness({
     return h && { date: h.date, name: SESSIONS[h.session]?.name || 'Training', items: h.entries.filter((e) => getExercise(e.exId)).map((e) => trainingItem(e.exId)) };
   },
   nextWorkout() {
-    const key = calendarDays(dateOnly(new Date()), 14).find((d) => d.planned)?.planned || nextSessionKey();
-    return { name: SESSIONS[key].name, items: buildWorkout(key).entries.map((e) => trainingItem(e.exId)) };
+    const next = calendarDays(dateOnly(new Date()), 14).find((d) => d.planned);
+    const key = next?.planned || nextSessionKey();
+    const date = next?.date || new Date();
+    const w = buildWorkout(key, phaseInfo(date).key, date);
+    return { name: SESSIONS[key].name, date, skipped: w.skipped, swapped: w.swapped, items: w.entries.map((e) => trainingItem(e.exId)) };
   },
 });
 

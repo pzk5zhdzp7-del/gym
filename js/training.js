@@ -1,6 +1,7 @@
 import { SESSIONS, ROTATION, WARMUP, getExercise } from './data/exercises.js';
 import { MOBILITY, getMobility } from './data/mobility.js';
 import { state, save, mondayIso } from './store.js';
+import { soreBlock } from './soreness.js';
 
 /* ---------- Periodisierung ---------- */
 
@@ -151,8 +152,7 @@ export function cooldownItems(area) {
   return Array.from({ length: n }, (_, i) => list[(offset + i) % list.length]);
 }
 
-export function buildEntry(slot, phase) {
-  const ex = slotExercise(slot);
+export function buildEntry(slot, phase, ex = slotExercise(slot)) {
   const sets = phase === 'deload' ? Math.max(2, slot.sets - 1) : slot.sets;
   const [min, max] = repRange(ex, phase);
   const weight = workingWeight(ex, phase);
@@ -172,9 +172,25 @@ export function buildEntry(slot, phase) {
   };
 }
 
-export function buildWorkout(key, phase = phaseInfo().key) {
+// Ab mittlerem Muskelkater: andere Variante des Platzes ohne diese Muskeln, sonst auslassen
+function soreChoice(slot, date, skipped, swapped) {
+  const ex = slotExercise(slot);
+  const sore = soreBlock(ex.muscles, ex.muscles2, date);
+  if (!sore.length) return ex;
+  const alt = slot.options.map(getExercise).find((o) => o && !soreBlock(o.muscles, o.muscles2, date).length);
+  if (alt) swapped.push({ from: ex.name, to: alt.name, muscles: sore });
+  else skipped.push({ name: ex.name, muscles: sore });
+  return alt || null;
+}
+
+export function buildWorkout(key, phase = phaseInfo().key, date = new Date()) {
   const session = SESSIONS[key];
-  const entries = session.slots.map((slot) => buildEntry(slot, phase));
+  const skipped = [];
+  const swapped = [];
+  const entries = session.slots
+    .map((slot) => [slot, soreChoice(slot, date, skipped, swapped)])
+    .filter(([, ex]) => ex)
+    .map(([slot, ex]) => buildEntry(slot, phase, ex));
   const steps = state.settings.warmup ? warmupSteps(session.area) : [];
 
   entries.forEach((e, ei) => {
@@ -192,7 +208,7 @@ export function buildWorkout(key, phase = phaseInfo().key) {
   if (state.settings.cardio) steps.push({ t: 'cardio', sec: 600, sect: 'Cardio' });
   if (state.settings.cooldown) steps.push(...mobilitySteps(cooldownItems(session.area), 'Cool-down'));
 
-  return { kind: 'strength', session: key, phase, started: null, entries, steps, pos: 0, stepStart: null };
+  return { kind: 'strength', session: key, phase, started: null, entries, skipped, swapped, steps, pos: 0, stepStart: null };
 }
 
 export function buildMobilityWorkout() {

@@ -6,6 +6,7 @@ import {
 } from '../training.js';
 import { esc, kg, fmtDate, openSheet, rerender } from '../ui.js';
 import { activitiesOn, activityRow, calendarMark, activityButton, isoDay } from '../activity.js';
+import { skippedText } from '../soreness.js';
 
 const DAY = 86400000;
 
@@ -70,7 +71,8 @@ export function dayContent(date, key) {
   if (acts.length) body += `<h2>Anderes Training</h2><div class="list">${acts.map((a) => activityRow(a, false)).join('')}</div>`;
 
   if (key) {
-    const w = buildWorkout(key, phase.key);
+    const w = buildWorkout(key, phase.key, date);
+    const sore = skippedText(w);
     body += `<h2>Geplant: ${SESSIONS[key].name} · ca. ${estimateMinutes(w)} Min</h2>
       <div class="list">${w.entries.map((e) => {
         const ex = getExercise(e.exId);
@@ -78,6 +80,7 @@ export function dayContent(date, key) {
         return `<button class="row" data-action="ex-info" data-id="${ex.id}" data-slot="${e.slotId}"><span class="icon">${ex.icon}</span><div class="grow"><div>${esc(ex.name)}</div>
           <div class="small muted">${e.sets} Sätze · Ziele ${e.targets.join(' · ')} ${e.type === 'hold' ? 's' : 'Wdh.'}${ex.side ? ' je Seite' : ''}${load} · Pause ${e.rest} s</div></div><span class="chev">›</span></button>`;
       }).join('')}</div>
+      ${sore ? `<p class="small">${esc(sore)}</p>` : ''}
       <p class="small muted">Gewichte und Ziele passen sich nach jedem Training an.</p>`;
     if (dateOnly(date).getTime() === dateOnly(new Date()).getTime() && !state.activeWorkout) {
       body += `<button class="btn block" data-action="start-workout" data-key="${key}">Jetzt starten</button>`;
