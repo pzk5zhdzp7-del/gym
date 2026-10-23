@@ -45,11 +45,12 @@ function silhouette(cx) {
     <ellipse cx="${x(8)}" cy="164" rx="5.5" ry="3"/>`;
 }
 
-function shapes(list, center, primary, secondary) {
+// cls(muscle) liefert die CSS-Klasse, tap = Muskeln lassen sich antippen (Muskelkater)
+function shapes(list, center, cls, tap) {
   let out = '';
   for (const [muscle, tag, attrs, mirror] of list) {
-    const cls = primary.includes(muscle) ? 'm1' : secondary.includes(muscle) ? 'm2' : 'm0';
-    const draw = (a) => `<${tag} class="${cls}" ${Object.entries(a).map(([k, v]) => `${k}="${v}"`).join(' ')}/>`;
+    const extra = tap ? ` data-action="sore-tap" data-m="${muscle}"` : '';
+    const draw = (a) => `<${tag} class="${cls(muscle)}"${extra} ${Object.entries(a).map(([k, v]) => `${k}="${v}"`).join(' ')}/>`;
     out += draw(attrs);
     if (mirror) {
       const m = { ...attrs };
@@ -61,12 +62,21 @@ function shapes(list, center, primary, secondary) {
   return out;
 }
 
-export function bodyMap(primary = [], secondary = []) {
-  return `<svg class="bodymap" viewBox="0 0 200 178" role="img" aria-label="Beanspruchte Muskeln">
+function svg(cls, label, tap = false) {
+  return `<svg class="bodymap${tap ? ' tap' : ''}" viewBox="0 0 200 178" role="img" aria-label="${label}">
     <g class="sil">${silhouette(50)}${silhouette(150)}</g>
-    ${shapes(FRONT, 50, primary, secondary)}
-    ${shapes(BACK, 150, primary, secondary)}
+    ${shapes(FRONT, 50, cls, tap)}
+    ${shapes(BACK, 150, cls, tap)}
     <text x="50" y="176" text-anchor="middle">vorne</text>
     <text x="150" y="176" text-anchor="middle">hinten</text>
   </svg>`;
+}
+
+export function bodyMap(primary = [], secondary = []) {
+  return svg((m) => (primary.includes(m) ? 'm1' : secondary.includes(m) ? 'm2' : 'm0'), 'Beanspruchte Muskeln');
+}
+
+// Muskelkater: levels = { chest: 2, … } (1 leicht, 2 mittel, 3 stark)
+export function soreMap(levels = {}, tap = false) {
+  return svg((m) => `s${levels[m] || 0}`, 'Muskelkater', tap);
 }

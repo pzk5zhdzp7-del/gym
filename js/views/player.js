@@ -5,6 +5,7 @@ import { WARMUP, SESSIONS, getExercise } from '../data/exercises.js';
 import { getMobility } from '../data/mobility.js';
 import { PHASES, finishWorkout, hasWeight, roundTo, fmtKg } from '../training.js';
 import { exerciseSheet } from './exercises.js';
+import { soreNote } from '../soreness.js';
 import {
   ui, esc, unitOf, kg, fmtClock, openSheet, closeSheet, beep, speak, rerender,
 } from '../ui.js';
@@ -215,6 +216,7 @@ function setCard(w, st) {
         ${lastTxt ? `<div class="small muted">${lastTxt}</div>` : ''}
       </div>
       ${hint}
+      ${st.s === 0 ? soreNote(ex.muscles, ex.muscles2) : ''}
       <div class="sets">${sets}</div>
       ${input}
       <details><summary>Kurz erklärt</summary><ol class="small steps">${ex.steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ol></details>

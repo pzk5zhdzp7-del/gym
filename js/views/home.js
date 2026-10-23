@@ -10,6 +10,7 @@ import { dayTotals, eatenRows, eatButton, planDate, replacedKeys, mealKey } from
 import {
   activityHint, activityButton, activitiesBetween, activityKcal, kcalNote, isoDay,
 } from '../activity.js';
+import { sorenessCard, sorenessButton } from '../soreness.js';
 import { dayContent } from './plan.js';
 import { ui, esc, n0, isStandalone, fmtDate } from '../ui.js';
 
@@ -71,6 +72,7 @@ function viewToday() {
     </a>
     ${hero}
     ${hint}
+    ${sorenessCard()}
     <div class="card">
       <div class="flex between"><b>Diese Woche</b><span class="pill ${done >= goal ? 'good' : ''}">${done} / ${goal} Trainings</span></div>
       <div class="progress"><div style="width:${Math.min(100, (done / Math.max(1, goal)) * 100)}%"></div></div>
@@ -78,6 +80,7 @@ function viewToday() {
       ${actLine}
     </div>
     ${activityButton()}
+    ${sorenessButton()}
     ${mobCard}
     ${foodSection(new Date(), 'Essen heute')}
     ${install}`;

@@ -7,6 +7,7 @@ import {
   slotExercise, workingWeight, repRange, phaseInfo, exerciseHistory, hasWeight, fmtKg,
 } from '../training.js';
 import { bodyMap } from '../body.js';
+import { soreNote } from '../soreness.js';
 import { ui, esc, kg, fmtDate, videoLink, openSheet, closeSheet, lineChart, rerender } from '../ui.js';
 
 function loadText(ex, phase = phaseInfo().key) {
@@ -92,6 +93,7 @@ export function exerciseSheet(id, { slotId = null, inWorkout = false } = {}) {
     <div class="small muted">${ex.icon} ${esc(ex.group)} · ${esc(ex.equip)}</div>
     <h3>${esc(ex.name)}</h3>
     <div class="small muted">${loadText(ex)}</div>
+    ${soreNote(ex.muscles, ex.muscles2)}
     <div class="card bodycard">${bodyMap(ex.muscles, ex.muscles2)}
       <div class="small"><span class="dot m1"></span>${ex.muscles.map((m) => MUSCLES[m]).join(', ')}
       ${ex.muscles2.length ? `<br><span class="dot m2"></span><span class="muted">${ex.muscles2.map((m) => MUSCLES[m]).join(', ')}</span>` : ''}</div></div>

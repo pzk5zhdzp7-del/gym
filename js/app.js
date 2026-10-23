@@ -1,8 +1,8 @@
 import { state } from './store.js';
 import {
-  buildWorkout, buildMobilityWorkout, startWorkout, calendarDays, dateOnly, nextSessionKey, phaseInfo,
+  buildWorkout, buildMobilityWorkout, startWorkout, calendarDays, dateOnly, nextSessionKey, phaseInfo, strengthHistory,
 } from './training.js';
-import { SESSIONS, getExercise } from './data/exercises.js';
+import { SESSIONS, MUSCLES, getExercise } from './data/exercises.js';
 import { ui, closeSheet, keepAwake, unlockAudio, fmtDate } from './ui.js';
 import { viewHome, homeTitle } from './views/home.js';
 import { viewPlan, planActions } from './views/plan.js';
@@ -16,6 +16,7 @@ import { start as startSync, onRemoteChange } from './sync.js';
 import { refreshCustom } from './recipes.js';
 import { photoActions, submitEatenOut } from './photo.js';
 import { activityActions, submitActivity, configureActivity } from './activity.js';
+import { sorenessActions, configureSoreness } from './soreness.js';
 
 const $view = document.getElementById('view');
 const $title = document.getElementById('title');
@@ -69,6 +70,7 @@ const actions = {
   ...foodActions,
   ...photoActions,
   ...activityActions,
+  ...sorenessActions,
   ...profileActions,
   ...playerActions,
   'start-workout'(el) {
@@ -178,6 +180,23 @@ configureActivity({
     const names = buildWorkout(key).entries.map((e) => getExercise(e.exId).name).join(', ');
     const when = next ? fmtDate(next.date, { weekday: 'long', day: 'numeric', month: 'long' }) : 'demnächst';
     return `Krafttraining im Gym (Muskelaufbau und Straffen), ${state.trainingDays.length}× pro Woche, aktuell Phase „${phaseInfo().name}“. Nächstes Training: ${SESSIONS[key].name} am ${when} (${names}).`;
+  },
+});
+
+// Muskelkater: welche Muskeln das letzte und das nächste Training beanspruchen
+const trainingItem = (exId) => {
+  const ex = getExercise(exId);
+  return { name: ex.name, muscles: ex.muscles, muscles2: ex.muscles2 || [] };
+};
+configureSoreness({
+  muscles: MUSCLES,
+  lastWorkout() {
+    const h = strengthHistory().slice(-1)[0];
+    return h && { date: h.date, name: SESSIONS[h.session]?.name || 'Training', items: h.entries.filter((e) => getExercise(e.exId)).map((e) => trainingItem(e.exId)) };
+  },
+  nextWorkout() {
+    const key = calendarDays(dateOnly(new Date()), 14).find((d) => d.planned)?.planned || nextSessionKey();
+    return { name: SESSIONS[key].name, items: buildWorkout(key).entries.map((e) => trainingItem(e.exId)) };
   },
 });
 
