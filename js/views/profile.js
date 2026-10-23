@@ -5,6 +5,7 @@ import { esc, n0, WEEKDAYS, WEEK_ORDER, openSheet, closeSheet, rerender } from '
 import {
   isLinked, syncStatus, members, inviteText, createHousehold, joinHousehold, unlink, validDbUrl,
 } from '../sync.js';
+import { healthSettings } from '../health.js';
 
 const STATUS = { online: '🟢 verbunden', connecting: '🟡 verbindet …', offline: '⚪️ offline, Änderungen werden nachgeholt', error: '🔴 Verbindung gestört', off: '⚪️ getrennt' };
 
@@ -102,6 +103,9 @@ export function viewProfile() {
       ${toggle('data-profile-bool', 'leftovers', p.leftovers, 'Reste-Modus', 'Mittags gibt\'s das Abendessen vom Vortag, so kochst du nur halb so oft.')}
     </div>
     <p class="small muted">Diese beiden Optionen gelten ab dem nächsten neuen Wochenplan.</p>
+
+    <h2>Apple Watch</h2>
+    ${healthSettings()}
 
     <h2>Gemeinsam planen</h2>
     ${syncSection()}

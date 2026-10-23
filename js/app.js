@@ -17,6 +17,7 @@ import { refreshCustom } from './recipes.js';
 import { photoActions, submitEatenOut } from './photo.js';
 import { activityActions, submitActivity, configureActivity } from './activity.js';
 import { sorenessActions, configureSoreness } from './soreness.js';
+import { healthActions, submitHealth } from './health.js';
 
 const $view = document.getElementById('view');
 const $title = document.getElementById('title');
@@ -71,6 +72,7 @@ const actions = {
   ...photoActions,
   ...activityActions,
   ...sorenessActions,
+  ...healthActions,
   ...profileActions,
   ...playerActions,
   'start-workout'(el) {
@@ -157,6 +159,7 @@ document.addEventListener('submit', (e) => {
   if (form.dataset.form === 'recipe') submitRecipe(form);
   if (form.dataset.form === 'eaten-out') submitEatenOut(form);
   if (form.dataset.form === 'activity') submitActivity(form);
+  if (form.dataset.form === 'health') submitHealth(form);
   if (form.dataset.form === 'exercise') submitExercise(form);
   if (form.dataset.form === 'weight') addWeight(form);
   if (form.dataset.form === 'measure') addMeasures(form);

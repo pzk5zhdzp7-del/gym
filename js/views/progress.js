@@ -7,6 +7,7 @@ import {
 import { esc, kg, fmtDate, openSheet, lineChart, barChart, rerender } from '../ui.js';
 import { activityList, activityButton } from '../activity.js';
 import { sorenessList } from '../soreness.js';
+import { healthProgress } from '../health.js';
 
 export const MEASURES = [
   { key: 'waist', label: 'Taille' },
@@ -97,6 +98,7 @@ export function viewProgress() {
     <h2>Anderes Training</h2>
     ${activityList() ? `<div class="list">${activityList()}</div>` : '<p class="small muted">Fußball, Joggen, Radtour? Beschreib es kurz, Claude trägt es ein.</p>'}
     ${activityButton()}
+    ${healthProgress()}
     <h2>Muskelkater</h2>
     ${sorenessList()}
     <button class="btn secondary block" data-action="sore-start">😣 Muskelkater eintragen</button>`;

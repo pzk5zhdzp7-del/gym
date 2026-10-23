@@ -37,6 +37,7 @@ const DEFAULTS = {
   shopping: { weekStart: null, checked: {}, custom: [] },
   customExercises: [], // eigene Übungen (siehe custom.js)
   activities: [], // anderes Training wie Fußball oder Joggen (siehe activity.js)
+  health: { days: {} }, // Werte der Apple Watch je Tag (siehe health.js)
   soreness: [], // Muskelkater je Tag und Muskel (siehe soreness.js)
   eatenOut: [], // anders gegessen, nur für diese Person (siehe photo.js)
   mealsEaten: {}, // abgehakte Mahlzeiten aus dem Plan, nur für diese Person (siehe photo.js)
